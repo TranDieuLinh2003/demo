@@ -1,6 +1,16 @@
 package com.demo.component.commune;
 
 import com.demo.component.commune.entity.Commune;
+import com.demo.component.commune.entity.CommuneDto;
+import com.demo.component.district.DistrictRepository;
+import com.demo.component.district.entity.District;
+import com.demo.component.province.ProvinceRepository;
+import com.demo.component.province.entity.Province;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.search.FullTextSession;
+import org.hibernate.search.Search;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,15 +25,54 @@ public class CommuneService {
     @Autowired
     private CommuneRepository repository;
 
+    @Autowired
+    private DistrictRepository dtRepository;
+
+    @Autowired
+    private ProvinceRepository prRepository;
+
+    private ModelMapper modelMapper = new ModelMapper();
+
+    //    @Autowired
+
+
     public List<Commune> findAll() {
         return repository.findAll();
     }
 
-    public Commune save(Commune commune) {
-//        System.out.println("hahsahashjđjhs" + UUID.randomUUID());
-//        System.out.println("hahsahashjđjhs" + String.valueOf(UUID.randomUUID()));
-//        commune.setId(String.valueOf(UUID.randomUUID()));
-        return repository.save(commune);
+    public CommuneDto save(CommuneDto commune) {
+        Commune entity = modelMapper.map(commune, Commune.class);
+        // check xem tỉnh thành có tồn tại hay không
+
+        for (Province province : prRepository.findAll()
+        ) {
+            if (commune.getIdProvince().equals(province.getId())) {
+                System.out.println("Tinh co ton tai");
+            } else {
+                System.out.println(commune.getIdProvince());
+                System.out.println("khong ton tai");
+//                System.out.println(prRepository.findAll()+ "hetttttttt");
+            }
+        }
+
+        // check xem quận huyện có tồn tại hay không
+//        System.out.println(commune.getIdDistrict());
+        for (District district : dtRepository.findAll()
+        ) {
+            if (commune.getIdDistrict().equals(district.getId())) {
+                System.out.println("Huyen co ton tai");
+            } else {
+                System.out.println(commune.getIdProvince());
+                System.out.println("huyen khong ton tai");
+            }
+        }
+
+        //set tỉnh thành và quận huyện
+        entity.setDistrict(dtRepository.findById(UUID.fromString(commune.getIdDistrict())).get());
+        entity.setProvince(prRepository.findById(UUID.fromString(commune.getIdProvince())).get());
+
+
+        return null;
     }
 
     public Commune findById(UUID id) {
@@ -61,6 +110,39 @@ public class CommuneService {
         );
         return repository.findAll(pageable);
     }
+
+    public void indexBooks() throws Exception {
+        try {
+            SessionFactory sessionFactory = null;
+            Session session = sessionFactory.getCurrentSession();
+            FullTextSession fullTextSession = Search.getFullTextSession(session);
+            fullTextSession.createIndexer().startAndWait();
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public <QueryBuilder> List<Commune> search(String keyword) {
+        SessionFactory sessionFactory = null;
+        Session session = sessionFactory.getCurrentSession();
+
+        FullTextSession fullTextSession = Search.getFullTextSession(session);
+
+//        QueryBuilder qb = fullTextSession.getSearchFactory()
+//                .buildQueryBuilder().forEntity(Commune.class).get();
+//        Query query = qb
+//                .keyword().onFields("id", "name", "code") // Chỉ định tìm theo cột nào
+//                .matching(keyword)
+//                .createQuery();
+//
+//        org.hibernate.Query hibQuery =
+//                fullTextSession.createFullTextQuery(query, Commune.class);
+
+//        List<Commune> results = hibQuery.list();
+//        return results;
+        return null;
+    }
+
 
 //    public void find(int )
 //

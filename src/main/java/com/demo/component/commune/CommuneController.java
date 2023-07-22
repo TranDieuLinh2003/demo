@@ -1,7 +1,8 @@
 package com.demo.component.commune;
 
-import com.demo.component.commune.entity.Commune;
 import com.demo.common.ResponseBean;
+import com.demo.component.commune.entity.Commune;
+import com.demo.component.commune.entity.CommuneDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -75,6 +75,15 @@ public class CommuneController {
         return new ResponseEntity<>(resBean, HttpStatus.OK);
     }
 
+    @GetMapping("/full-text-search")
+    @Operation(summary = "[Tìm kiếm theo nhiều trường]")
+    public ResponseEntity<?> findAllBy(@RequestParam(name = "keyword") String keyword) {
+        ResponseBean resBean = new ResponseBean();
+        resBean.setCode(HttpStatus.OK.toString());
+        resBean.setData(repo.findByNameAndCodeContains(keyword));
+        return new ResponseEntity<>(resBean, HttpStatus.OK);
+    }
+
     @GetMapping("/findByCode")
     @Operation(summary = "[Tìm kiếm theo mã]")
     public ResponseEntity<?> findByCode(@RequestParam(name = "code") String code) {
@@ -86,21 +95,22 @@ public class CommuneController {
 
     @PostMapping("/add")
     @Operation(summary = "[Thêm xã mới]")
-    public ResponseEntity<Object> add(Model model, @RequestBody @Valid Commune entity) {
+    public ResponseEntity<Object> add(@RequestBody @Valid CommuneDto entity) {
         ResponseBean resBean = new ResponseBean();
         resBean.setCode(HttpStatus.OK.toString());
-        resBean.setData(service.save(entity));
+        CommuneDto commune = service.save(entity);
+        resBean.setData(commune);
         return new ResponseEntity<>(resBean, HttpStatus.OK);
     }
 
-    @PutMapping("/update/{id}")
-    @Operation(summary = "[Sửa]")
-    public ResponseEntity<Object> update(Model model, @RequestParam("id") String id, @RequestBody @Valid Commune entity) {
-        ResponseBean resBean = new ResponseBean();
-        resBean.setCode(HttpStatus.OK.toString());
-        resBean.setData(service.save(entity));
-        return new ResponseEntity<>(resBean, HttpStatus.OK);
-    }
+//    @PutMapping("/update/{id}")
+//    @Operation(summary = "[Sửa]")
+//    public ResponseEntity<Object> update(Model model, @RequestParam("id") String id, @RequestBody @Valid Commune entity) {
+//        ResponseBean resBean = new ResponseBean();
+//        resBean.setCode(HttpStatus.OK.toString());
+//        resBean.setData(service.save(entity));
+//        return new ResponseEntity<>(resBean, HttpStatus.OK);
+//    }
 
     @GetMapping("/export/excel")
     @Operation(summary = "[Xuất excel]")
@@ -118,24 +128,24 @@ public class CommuneController {
         excelExporter.export(response);
     }
 
-    @PostMapping("/import/excel")
-    @Operation(summary = "[đọc file excel]")
-    public ResponseEntity<?> importToExcel(HttpServletResponse response) throws IOException {
-//        response.setContentType("application/octet-stream");
-
-        ResponseBean resBean = new ResponseBean();
-        resBean.setCode(HttpStatus.OK.toString());
-//        resBean.setData(service.save(entity));
-//        String headerKey = "Content-Disposition";
-//        String headerValue = "attachment; filename=users_" + ".xlsx";
-//        response.setHeader(headerKey, headerValue);
-        ImportCommune importCommune = new ImportCommune();
-        List<Commune> newFile = importCommune.readExcel("D:\\download\\users_kkkk.xlsx");
-        for (Commune commune : newFile) {
-            resBean.setData(service.save(commune));
-        }
-        return new ResponseEntity<>(resBean, HttpStatus.OK);
-    }
+//    @PostMapping("/import/excel")
+//    @Operation(summary = "[đọc file excel]")
+//    public ResponseEntity<?> importToExcel(HttpServletResponse response) throws IOException {
+////        response.setContentType("application/octet-stream");
+//
+//        ResponseBean resBean = new ResponseBean();
+//        resBean.setCode(HttpStatus.OK.toString());
+////        resBean.setData(service.save(entity));
+////        String headerKey = "Content-Disposition";
+////        String headerValue = "attachment; filename=users_" + ".xlsx";
+////        response.setHeader(headerKey, headerValue);
+//        ImportCommune importCommune = new ImportCommune();
+//        List<Commune> newFile = importCommune.readExcel("D:\\download\\users_kkkk.xlsx");
+//        for (Commune commune : newFile) {
+//            resBean.setData(service.save(commune));
+//        }
+//        return new ResponseEntity<>(resBean, HttpStatus.OK);
+//    }
 
     @GetMapping("/count")
     @Operation(summary = "[Đếm số bản ghi]")
